@@ -38,6 +38,8 @@ class WordleGame:
         for i,(a,b) in enumerate(zip(self.secret, guess)):
             if a == b:
                 match[i] = a
+            elif b in self.secret:
+                match[i] = '?'
 
         has = set(self.secret).intersection(set(guess))
         excluding = set(guess).difference(set(self.secret))
