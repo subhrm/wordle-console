@@ -1,5 +1,6 @@
 from string import ascii_lowercase 
 import random
+from pathlib import Path
 
 class WordleGame:
 
@@ -51,17 +52,25 @@ class WordleGame:
         return match, has, excluding 
 
     def __load_vocab(self):
-        guesses_file = "data/wordle-allowed-guesses.txt"
-        possible_answers_file = "data/wordle-answers-alphabetical.txt"
+        module_path = Path(__file__)
+        data_dir = module_path.parent / "data"
+        guesses_file = data_dir / "wordle-allowed-guesses.txt"
+        possible_answers_file = data_dir / "wordle-answers-alphabetical.txt"
 
-        with open(guesses_file) as fin:
-            _possible_guesses = list(fin.read().split("\n"))
+        try:
 
-        with open(possible_answers_file) as fin:
-            self.possible_answers = list(fin.read().split("\n"))
+            with open(guesses_file) as fin:
+                _possible_guesses = list(fin.read().split("\n"))
 
-        _possible_guesses.extend(self.possible_answers)
-        self.possible_guesses = set(_possible_guesses)
+            with open(possible_answers_file) as fin:
+                self.possible_answers = list(fin.read().split("\n"))
+
+            _possible_guesses.extend(self.possible_answers)
+            self.possible_guesses = set(_possible_guesses)
+        except Exception as e:
+            print(f"{data_dir=}")
+            print(f"Error in loading vocab files {e}")
+            raise e
 
     def get_state(self):
         return f"Number of guesses : {self.n_guesses}, Remaining characters : {self.get_remaining_chars()}"
