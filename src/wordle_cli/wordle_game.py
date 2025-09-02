@@ -1,77 +1,49 @@
-from string import ascii_lowercase 
+from string import ascii_lowercase
 import random
-from pathlib import Path
+from dataclasses import dataclass
+
+from .vocab import load_vocab
+
 
 class WordleGame:
-
-    def __init__(self, seed:int=-1):
-
-        self.__load_vocab()
-        random.seed(seed)
-        self.secret = random.choice(self.possible_answers) 
+    def __init__(self):
+        self.possible_answers, self.possible_guesses = load_vocab()
+        self.secret = random.choice(list(self.possible_answers))
+        self.word_list = list(self.possible_answers.union(self.possible_guesses))
 
         self.is_solved = False
-        self.choices = [] 
-        self.n_guesses = 0
-        self.characters = list(ascii_lowercase)
+        self.guesses = []
+        self.remaining_characters = list(ascii_lowercase)
 
-    def get_remaining_chars(self):
-        return " ".join(self.characters)
-
-    def validate_guess(self, g:str) -> bool:
-        if (len(g) != 5) or (g not in self.possible_guesses):
+    def play(self, g: str) -> bool:
+        g = g.lower()
+        
+        if not self.validate_guess(g):
             return False
 
-        return True
-
-
-    def check_answer(self, g:str) -> bool:
+        score = [0] * 5
         if g == self.secret:
             self.is_solved = True
-            return True
+            score = [1] * 5
+        else:
+            score = self.evaluate_guess(g)
 
-        return False
+        self.guesses.append((g, score))
+        return True
 
-    def find_match(self, guess):
-        self.n_guesses += 1
-        match = list("*****")
+    def validate_guess(self, g: str) -> bool:
+        return (g in self.possible_guesses) or (g in self.possible_answers)
 
-        for i,(a,b) in enumerate(zip(self.secret, guess)):
+    def evaluate_guess(self, guess) -> list[int]:
+        score = [0] * 5
+
+        for i, (a, b) in enumerate(zip(self.secret, guess)):
             if a == b:
-                match[i] = a
+                score[i] = 1
             elif b in self.secret:
-                match[i] = '?'
+                score[i] = 2
 
-        has = set(self.secret).intersection(set(guess))
-        excluding = set(guess).difference(set(self.secret))
-
-        for c in list(excluding):
-            if c in self.characters:
-                self.characters.remove(c)
-
-        return match, has, excluding 
-
-    def __load_vocab(self):
-        module_path = Path(__file__)
-        data_dir = module_path.parent / "data"
-        guesses_file = data_dir / "wordle-allowed-guesses.txt"
-        possible_answers_file = data_dir / "wordle-answers-alphabetical.txt"
-
-        try:
-
-            with open(guesses_file) as fin:
-                _possible_guesses = list(fin.read().split("\n"))
-
-            with open(possible_answers_file) as fin:
-                self.possible_answers = list(fin.read().split("\n"))
-
-            _possible_guesses.extend(self.possible_answers)
-            self.possible_guesses = set(_possible_guesses)
-        except Exception as e:
-            print(f"{data_dir=}")
-            print(f"Error in loading vocab files {e}")
-            raise e
+        return score
 
     def get_state(self):
         return f"Number of guesses : {self.n_guesses}, Remaining characters : {self.get_remaining_chars()}"
-        
