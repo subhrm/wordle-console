@@ -1,7 +1,6 @@
 from rich.console import Console
 from rich.text import Text
 from rich.table import Table
-from rich.live import Live
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich import box
@@ -18,6 +17,7 @@ styles = {
     "present": "yellow on blue",
     "absent": "bold black on white",
 }
+
 
 def draw_table() -> Table:
     table = Table(box=box.ROUNDED, style="bold cyan", show_lines=True)
@@ -49,15 +49,20 @@ def cli():
         style="bold green",
     )
 
-    inst = Panel(title="[blue]Instructions", renderable=Text.from_markup(
-        """[bold cyan]Instructions:[/bold cyan]
+    inst = Panel(
+        title="[blue]Instructions",
+        renderable=Text.from_markup(
+            f"""[bold cyan]Instructions:[/bold cyan]
 - You have 6 attempts to guess the secret 5-letter word.
 - After each guess, you'll receive feedback:
-    - [bold white on green]Green[/bold white on green]: Correct letter in the correct position.
-    - [bold yellow on blue]Yellow[/bold yellow on blue]: Correct letter in the wrong position.
-    - [bold black on white]Black[/bold black on white]: Letter not in the word.
+    - [{styles["correct"]}] Correct [/{styles["correct"]}]: Correct letter in the correct position.
+    - [{styles["present"]}] Present [/{styles["present"]}]: Correct letter in the wrong position.
+    - [{styles["absent"]}] Absent [/{styles["absent"]}]: Letter not in the word.
 - Use this feedback to refine your guesses and find the secret word!
-- Good luck and have fun!"""), style="bold", width=80
+- Good luck and have fun!"""
+        ),
+        style="bold",
+        width=80,
     )
     console.print(inst)
 
@@ -71,9 +76,7 @@ def cli():
 
         result = game.play(guess)
         if not result:
-            console.print(
-                f"'{guess}' is not in the word list. Try again.", style="bold red"
-            )
+            console.print(f"'{guess}' is not in the word list. Try again.", style="bold red")
             continue
 
         console.print(draw_table())
