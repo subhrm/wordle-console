@@ -69,7 +69,25 @@ def cli():
     while True:
         i = len(game.guesses)
         console.print(f"You have {6 - i} guesses left.", style="bold blue")
-        guess = Prompt.ask("Enter your 5-letter guess: ").strip().lower()
+        guess = Prompt.ask("Enter your 5-letter guess (or type 'hint'): ").strip().lower()
+        if guess == "hint":
+            if hasattr(game, "get_hints"):
+                possible_words = game.get_hints()
+                if possible_words:
+                    max_display = 15
+                    shown = possible_words[:max_display]
+                    table = Table(title=f"Possible words ({len(possible_words)})", box=box.SIMPLE)
+                    table.add_column("Word", style="bold yellow")
+                    for w in shown:
+                        table.add_row(w.upper())
+                    if len(possible_words) > max_display:
+                        table.add_row(f"...and {len(possible_words) - max_display} more")
+                    console.print(table)
+                else:
+                    console.print("No possible words found. Check your previous guesses.", style="bold red")
+            else:
+                console.print("Hint feature not implemented.", style="bold red")
+            continue
         if len(guess) != 5 or not guess.isalpha():
             console.print("Please enter a valid 5-letter word.", style="bold red")
             continue
